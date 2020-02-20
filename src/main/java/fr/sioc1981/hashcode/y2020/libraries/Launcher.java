@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -50,8 +51,8 @@ public class Launcher {
 		).forEach(fileName -> {
 			try {
 				loadInput(new File("in", fileName + ".txt"));
-//				ArrayList<Integer> pizzasToOrder = process(pizzas);
-				writeOutput(libs, fileName);
+				process();
+				writeOutput(registrationLibs, fileName);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -61,18 +62,27 @@ public class Launcher {
 	}
 
 	private static ArrayList<Integer> process() {
-//		int nbPizzas = allPizzas.size();
-//		ArrayList<Integer> pizzasToOrder = null;
-//		
-//	    pool = new ForkJoinPool();
-//		NodeTask app = new NodeTask(pizzas.size() - 1, 0, new ArrayList<Integer>());
-//		long best = pool.invoke(app);
-//		System.out.println("score: " + best + " / " + maxSlices + " / " + allSlices);
-//		allScore += best;
-//		pizzasToOrder = app.currentPizzasToOrder;
-//		// revert as we start from the end
-//		Collections.reverse(pizzasToOrder);
-//		return pizzasToOrder;
+		registrationLibs = libs.stream().sorted(new Comparator<Library>() {
+
+			@Override
+			public int compare(Library o1, Library o2) {
+				int res = o1.signupDuration - o2.signupDuration;
+				if (res == 0) {
+					res = o1.nbBooksByDay  - o2.nbBooksByDay;
+				}
+				return res;
+			}
+			
+		}).collect(Collectors.toList());
+//		libs.forEach(lib -> {
+//			lib.orderedBooks = lib.books.stream().sorted(new Comparator<Integer>() {
+//				@Override
+//				public int compare(Integer lib1, Integer lib2) {
+//					return bookScores.get(lib1) - bookScores.get(lib2);
+//				}
+//				
+//			}).collect(Collectors.toList());
+//		});
 		return null;
 	}
 

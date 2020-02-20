@@ -11,5 +11,7 @@ public class Library {
 	int nbBooksByDay;
 	
 	List<Integer> books;
+	
+	List<Integer> orderedBooks;
 
 }
