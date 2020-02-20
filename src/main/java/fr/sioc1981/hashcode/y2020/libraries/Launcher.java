@@ -9,7 +9,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ForkJoinPool;
@@ -24,8 +26,11 @@ public class Launcher {
 	
 	private static List<Library> registrationLibs;
 	
+	private static Map<Integer, Integer> bookRegistration;
+	
 	private static long allScore;
 	private static ForkJoinPool pool;
+	private static int regitrationTime;
 
 
 	public static void main(String[] args) throws Exception {
@@ -66,28 +71,48 @@ public class Launcher {
 
 			@Override
 			public int compare(Library o1, Library o2) {
-				int res = o1.signupDuration - o2.signupDuration;
+				int res = 0;
+				res = o1.nbBooksByDay  - o2.nbBooksByDay;
 				if (res == 0) {
-					res = o1.nbBooksByDay  - o2.nbBooksByDay;
+					res =  o1.signupDuration - o2.signupDuration;
 				}
 				return res;
 			}
 			
 		}).collect(Collectors.toList());
-//		libs.forEach(lib -> {
-//			lib.orderedBooks = lib.books.stream().sorted(new Comparator<Integer>() {
-//				@Override
-//				public int compare(Integer lib1, Integer lib2) {
-//					return bookScores.get(lib1) - bookScores.get(lib2);
-//				}
-//				
-//			}).collect(Collectors.toList());
-//		});
+		registrationLibs.forEach(lib -> {
+			regitrationTime += lib.signupDuration; 
+			lib.startTime = regitrationTime;
+//			System.out.println("lib.id: " + lib.id);
+//			System.out.println("regitrationTime: " + regitrationTime);
+//			System.out.println("bookRegistration: " + bookRegistration);
+			lib.orderedBooks = lib.books.stream().filter(b -> {
+				return bookRegistration.get(b) == null || bookRegistration.get(b) > regitrationTime;
+			}).sorted(new Comparator<Integer>() {
+				@Override
+				public int compare(Integer lib1, Integer lib2) {
+					return bookScores.get(lib1) - bookScores.get(lib2);
+				}
+			}).collect(Collectors.toList());
+//			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
+			int scanDay = regitrationTime;
+			int index = 0;
+			for (Integer b : lib.orderedBooks) {
+				if (index % lib.nbBooksByDay == 0) {
+					scanDay++;
+				}
+				bookRegistration.put(b, scanDay);
+				index++;
+			}
+		});
+		registrationLibs = registrationLibs.stream().filter(lib -> lib.orderedBooks.size() > 0).collect(Collectors.toList());
 		return null;
 	}
 
 	private static void loadInput(File file) throws FileNotFoundException {
 		libs = new ArrayList<Library>();
+		regitrationTime = 0;
+		bookRegistration = new HashMap<>();
 		try (final Scanner scanner = new Scanner(file)) {
 			scanner.nextInt();
 			scanner.nextInt();
@@ -118,7 +143,7 @@ public class Launcher {
 	}
 
 	private static void writeOutput(List<Library> libs, String fileName) throws Exception {
-		System.out.println(libs);
+//		System.out.println(libs);
 		FileWriter fwriter = new FileWriter(new File("out", fileName + ".out"));
 		try (BufferedWriter bwriter = new BufferedWriter(fwriter)) {
 			bwriter.write(Integer.toString(libs.size()));
@@ -126,9 +151,9 @@ public class Launcher {
 			for (Library lib : libs) {
 				bwriter.write(Integer.toString(lib.id));
 				bwriter.write(" ");
-				bwriter.write(Integer.toString(lib.books.size()));
+				bwriter.write(Integer.toString(lib.orderedBooks.size()));
 				bwriter.write('\n');
-				bwriter.write(lib.books.stream().map(i -> Integer.toString(i)).collect(Collectors.joining(" ")));
+				bwriter.write(lib.orderedBooks.stream().map(i -> Integer.toString(i)).collect(Collectors.joining(" ")));
 				bwriter.write('\n');
 			}
 		}

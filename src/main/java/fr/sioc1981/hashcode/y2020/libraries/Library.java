@@ -1,5 +1,6 @@
 package fr.sioc1981.hashcode.y2020.libraries;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Library {
@@ -8,10 +9,14 @@ public class Library {
 	
 	int signupDuration;
 	
+	int startTime;
+	
 	int nbBooksByDay;
+	
+	int maxScore;
 	
 	List<Integer> books;
 	
-	List<Integer> orderedBooks;
+	List<Integer> orderedBooks = new ArrayList<>();
 
 }
