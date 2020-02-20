@@ -72,9 +72,9 @@ public class Launcher {
 			@Override
 			public int compare(Library o1, Library o2) {
 				int res = 0;
-				res = o2.nbBooksByDay - o1.nbBooksByDay;
+				res =  o2.books.size() - o1.books.size();
 				if (res == 0) {
-					res =  o2.books.size() - o1.books.size();
+					res = o2.nbBooksByDay - o1.nbBooksByDay;
 				}
 				if (res == 0) {
 					res =  o2.signupDuration - o1.signupDuration;
