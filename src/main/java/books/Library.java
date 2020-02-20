@@ -11,6 +11,9 @@ public class Library {
 	
 
 
+
+
+
 	private int registeringTime;
 	
 	private int shippableBooksPerDay;
@@ -71,6 +74,15 @@ public class Library {
 
 	public void setLibraryId(int libraryId) {
 		this.libraryId = libraryId;
+	}
+	
+	public GoogleScanner getScanner() {
+		return scanner;
+	}
+
+
+	public void setScanner(GoogleScanner scanner) {
+		this.scanner = scanner;
 	}
 	
 }
