@@ -23,26 +23,22 @@ public class LauncherDCO {
 		lib0Books.add(2);
 		lib0Books.add(3);
 		lib0Books.add(4);
-		Library lib0 = new Library(0, 2, 2, allBooks, lib0Books);
+		LibraryDCO lib0 = new LibraryDCO(0, 2, 2, allBooks, lib0Books);
 		
 		ArrayList<Integer> lib1Books = new ArrayList<Integer>();
 		lib1Books.add(3);
 		lib1Books.add(2);
 		lib1Books.add(5);
 		lib1Books.add(0);
-		Library lib1 = new Library(1, 2, 2, allBooks, lib1Books);
+		LibraryDCO lib1 = new LibraryDCO(1, 2, 2, allBooks, lib1Books);
 		
-		ArrayList<Library> libraries= new ArrayList<Library>();
+		ArrayList<LibraryDCO> libraries= new ArrayList<LibraryDCO>();
 		libraries.add(lib0);
 		libraries.add(lib1);
 		
 		GoogleScanner gScanner = new GoogleScanner(7, libraries);
 		
-		int nextBestLibrary = gScanner.getNextPossibleLibraryWithBestScore();
-		while(nextBestLibrary != -1) {
-			gScanner.register(libraries.get(nextBestLibrary));
-			nextBestLibrary = gScanner.getNextPossibleLibraryWithBestScore();
-		}
+		gScanner.compute();
 		
 		System.out.println(gScanner.getOutput());
 		

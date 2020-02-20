@@ -5,22 +5,22 @@ import java.util.HashMap;
 
 public class GoogleScanner {
 	
-	HashMap<Integer, Library> registeredLibraries = new HashMap<Integer, Library>();
-	ArrayList<Library> orderedRegisteredLibraries = new ArrayList<Library>();
+	HashMap<Integer, LibraryDCO> registeredLibraries = new HashMap<Integer, LibraryDCO>();
+	ArrayList<LibraryDCO> orderedRegisteredLibraries = new ArrayList<LibraryDCO>();
 	
-	HashMap<Integer, Library> remainingLibraries = new HashMap<Integer, Library>();
+	HashMap<Integer, LibraryDCO> remainingLibraries = new HashMap<Integer, LibraryDCO>();
 	
 	private int maxDays;
 	
-	public GoogleScanner(int maxDays, ArrayList<Library> allLibraries) {
+	public GoogleScanner(int maxDays, ArrayList<LibraryDCO> allLibraries) {
 		this.maxDays = maxDays;
-		for(Library library : allLibraries) {
+		for(LibraryDCO library : allLibraries) {
 			library.setScanner(this);
 			this.remainingLibraries.put(library.getLibraryId(), library);
 		}	
 	}
 
-	public boolean register(Library library) {
+	public boolean register(LibraryDCO library) {
 		
 		if(getNextPossibleRegisterDay() + library.getRegisteringTime() < maxDays)
 		{
@@ -38,7 +38,7 @@ public class GoogleScanner {
 	
 	public int getNextPossibleRegisterDay() {
 		int retour = 0;
-		for(Library library : registeredLibraries.values()) {
+		for(LibraryDCO library : registeredLibraries.values()) {
 			retour += library.getRegisteringTime();
 		}
 		return retour;
@@ -49,7 +49,7 @@ public class GoogleScanner {
 	}
 	
 	public boolean isBookAlreadyScanned(Integer bookId) {
-		for(Library library : registeredLibraries.values()) {
+		for(LibraryDCO library : registeredLibraries.values()) {
 			if(library.hasBook(bookId)) {
 				return true;
 			}
@@ -61,7 +61,7 @@ public class GoogleScanner {
 		int remainingDays = getRemainingDays();
 		int bestNextLibraryId = -1;
 		int score = 0;
-		for(Library library : remainingLibraries.values()) {
+		for(LibraryDCO library : remainingLibraries.values()) {
 			if(library.getPotentialValue() > score && library.getRegisteringTime() + 1 <= remainingDays) {
 				bestNextLibraryId = library.getLibraryId();
 				score = library.getPotentialValue();
@@ -73,12 +73,29 @@ public class GoogleScanner {
 	
 	public String getOutput() {
 		String retour = "";
-		for(Library library : orderedRegisteredLibraries) {
+		for(LibraryDCO library : orderedRegisteredLibraries) {
 			retour += library.getLibraryId();
 			retour += ":";
 			retour += library.getBookOrderAsString();
 		}
 		return retour;
+	}
+	
+	
+	public void compute() {
+		int nextBestLibrary = getNextPossibleLibraryWithBestScore();
+		while(nextBestLibrary != -1) {
+			register(remainingLibraries.get(nextBestLibrary));
+			nextBestLibrary = getNextPossibleLibraryWithBestScore();
+		}
+	}
+
+	public ArrayList<LibraryDCO> getOrderedRegisteredLibraries() {
+		return orderedRegisteredLibraries;
+	}
+
+	public void setOrderedRegisteredLibraries(ArrayList<LibraryDCO> orderedRegisteredLibraries) {
+		this.orderedRegisteredLibraries = orderedRegisteredLibraries;
 	}
 	
 }

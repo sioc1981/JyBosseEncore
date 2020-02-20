@@ -15,6 +15,10 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import books.Book;
+import books.GoogleScanner;
+import books.LibraryDCO;
+
 public class Launcher {
 
 	private static int dayThreshold;
@@ -25,6 +29,10 @@ public class Launcher {
 	
 	private static long allScore;
 	private static ForkJoinPool pool;
+	
+	private static ArrayList<Book> allBooks = new ArrayList<Book>();
+	private static ArrayList<LibraryDCO> allLibraries = new ArrayList<LibraryDCO>();
+	private static GoogleScanner gScanner;
 
 
 	public static void main(String[] args) throws Exception {
@@ -39,9 +47,9 @@ public class Launcher {
 		Stream.of("a_example"
 				, 
 				"b_read_on"
-				, 
+				,
 				"c_incunabula"
-				, 
+				,
 				"d_tough_choices"
 				,
 				"e_so_many_books"
@@ -50,8 +58,10 @@ public class Launcher {
 		).forEach(fileName -> {
 			try {
 				loadInput(new File("in", fileName + ".txt"));
+				gScanner.compute();
+				System.out.println(gScanner.getOutput());
 //				ArrayList<Integer> pizzasToOrder = process(pizzas);
-				writeOutput(libs, fileName);
+				writeOutputDCO(gScanner.getOrderedRegisteredLibraries(), fileName);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -77,6 +87,10 @@ public class Launcher {
 	}
 
 	private static void loadInput(File file) throws FileNotFoundException {
+		allBooks = new ArrayList<Book>();
+		allLibraries = new ArrayList<LibraryDCO>();
+		
+		
 		libs = new ArrayList<Library>();
 		try (final Scanner scanner = new Scanner(file)) {
 			scanner.nextInt();
@@ -86,11 +100,18 @@ public class Launcher {
 			scanner.nextLine();
 			bookScores = Arrays.asList(scanner.nextLine().split(" ")).stream().map(Integer::parseInt)
 					.collect(Collectors.toList());
+			
+			
+			for(int i = 0; i < bookScores.size(); i++) {
+				Book book = new Book(i, bookScores.get(i));
+				allBooks.add(book);
+			}
 
 //			System.out.println(bookScores);
 			int id = 0;
 			while (scanner.hasNextLine()) {
 				Library lib = new Library();
+				
 				lib.id = id++;
 				try {
 				scanner.nextInt(); // nb Books
@@ -100,10 +121,22 @@ public class Launcher {
 				lib.books = Arrays.asList(scanner.nextLine().split(" ")).stream().map(Integer::parseInt)
 						.collect(Collectors.toList());
 				libs.add(lib);
+				
+				ArrayList<Integer> libraryBooks = new ArrayList<Integer>();
+				for(Integer bookId : lib.books) {
+					libraryBooks.add(bookId);
+				}
+				
+				LibraryDCO libDCO = new LibraryDCO(lib.id, lib.signupDuration, lib.nbBooksByDay, allBooks, libraryBooks);
+				allLibraries.add(libDCO);
+				
 				} catch (NoSuchElementException e) {
 					// end of file
 				}
 			}
+			
+			gScanner = new GoogleScanner(dayThreshold, allLibraries);
+			
 		}
 	}
 
@@ -119,6 +152,23 @@ public class Launcher {
 				bwriter.write(Integer.toString(lib.books.size()));
 				bwriter.write('\n');
 				bwriter.write(lib.books.stream().map(i -> Integer.toString(i)).collect(Collectors.joining(" ")));
+				bwriter.write('\n');
+			}
+		}
+	}
+	
+	private static void writeOutputDCO(List<LibraryDCO> libs, String fileName) throws Exception {
+		System.out.println(libs);
+		FileWriter fwriter = new FileWriter(new File("out", fileName + ".out"));
+		try (BufferedWriter bwriter = new BufferedWriter(fwriter)) {
+			bwriter.write(Integer.toString(libs.size()));
+			bwriter.write('\n');
+			for (LibraryDCO lib : libs) {
+				bwriter.write(Integer.toString(lib.getLibraryId()));
+				bwriter.write(" ");
+				bwriter.write(Integer.toString(lib.getBookOrder().size() ));
+				bwriter.write('\n');
+				bwriter.write(lib.getBookOrder().stream().map(i -> Integer.toString(i)).collect(Collectors.joining(" ")));
 				bwriter.write('\n');
 			}
 		}

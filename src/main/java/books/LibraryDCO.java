@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeMap;
 
-public class Library {
+public class LibraryDCO {
 
 	private HashMap<Integer, Book> books = new HashMap<Integer, Book>();
 	
@@ -22,7 +22,7 @@ public class Library {
 	private int libraryId;
 	
 	
-	public Library(int libraryId, int registeringTime, int shippableBooksPerDay, ArrayList<Book> allBooks, ArrayList<Integer> libraryBooks) {
+	public LibraryDCO(int libraryId, int registeringTime, int shippableBooksPerDay, ArrayList<Book> allBooks, ArrayList<Integer> libraryBooks) {
 		this.setLibraryId(libraryId);
 		this.setRegisteringTime(registeringTime);
 		this.setShippableBooksPerDay(shippableBooksPerDay);
@@ -106,7 +106,10 @@ public class Library {
 						}
 					}
 				}
-				bookOrder.add(bookToSend.getId());
+				if(bookToSend != null) {
+					bookOrder.add(bookToSend.getId());
+				}
+				
 			}
 			
 			
@@ -126,6 +129,16 @@ public class Library {
 		}
 		retour += "}";
 		return retour;
+	}
+
+
+	public ArrayList<Integer> getBookOrder() {
+		return bookOrder;
+	}
+
+
+	public void setBookOrder(ArrayList<Integer> bookOrder) {
+		this.bookOrder = bookOrder;
 	}
 	
 }
