@@ -2,6 +2,7 @@ package books;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 public class Library {
 
@@ -9,7 +10,7 @@ public class Library {
 	
 	private GoogleScanner scanner;
 	
-
+	private ArrayList<Integer> bookOrder = new ArrayList<Integer>();
 
 
 
@@ -83,6 +84,48 @@ public class Library {
 
 	public void setScanner(GoogleScanner scanner) {
 		this.scanner = scanner;
+	}
+
+
+	public void register(int remainingDays) {
+		int totalShipDays = (books.size() / shippableBooksPerDay) + 1;
+		if(registeringTime + totalShipDays > remainingDays) {
+			//pas assez de temps pour mettre tous les livres, on choisit les meilleurs qui ne sont pas déjà scannés ou en cours de scan
+			
+			int sendableBooks = shippableBooksPerDay * (remainingDays - registeringTime);
+			
+			for(int i = 0; i < sendableBooks; i++) {
+				Book bookToSend = null;
+				for(Book book : books.values()) {
+					
+					if(!scanner.isBookAlreadyScanned(book.getId()) && !bookOrder.contains(book.getId())) {
+						if(bookToSend == null) {
+							bookToSend = book;
+						}else if(book.getScore() > bookToSend.getScore()){
+							bookToSend = book;
+						}
+					}
+				}
+				bookOrder.add(bookToSend.getId());
+			}
+			
+			
+		}else {
+			//assez de temps pour mettre tous les livres, on les met tous dans n'importe quel ordre
+			for(Book book : books.values()) {
+				bookOrder.add(book.getId());
+			}
+		}
+		
+	}
+	
+	public String getBookOrderAsString() {
+		String retour = "{";
+		for(Integer bookId : bookOrder) {
+			retour += bookId + ",";
+		}
+		retour += "}";
+		return retour;
 	}
 	
 }

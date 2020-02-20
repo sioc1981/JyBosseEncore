@@ -44,7 +44,7 @@ public class LauncherDCO {
 			nextBestLibrary = gScanner.getNextPossibleLibraryWithBestScore();
 		}
 		
-		System.out.println(gScanner.getLibrariesOrder());
+		System.out.println(gScanner.getOutput());
 		
 	}
 

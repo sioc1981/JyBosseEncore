@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class GoogleScanner {
 	
 	HashMap<Integer, Library> registeredLibraries = new HashMap<Integer, Library>();
+	ArrayList<Library> orderedRegisteredLibraries = new ArrayList<Library>();
 	
 	HashMap<Integer, Library> remainingLibraries = new HashMap<Integer, Library>();
 	
@@ -23,7 +24,9 @@ public class GoogleScanner {
 		
 		if(getNextPossibleRegisterDay() + library.getRegisteringTime() < maxDays)
 		{
+			library.register(getRemainingDays());
 			registeredLibraries.put(library.getLibraryId(), library);
+			orderedRegisteredLibraries.add(library);
 			remainingLibraries.remove(library.getLibraryId());
 			return true;
 		}
@@ -68,10 +71,12 @@ public class GoogleScanner {
 	}
 	
 	
-	public String getLibrariesOrder() {
+	public String getOutput() {
 		String retour = "";
-		for(Integer libraryId : registeredLibraries.keySet()) {
-			retour += libraryId;
+		for(Library library : orderedRegisteredLibraries) {
+			retour += library.getLibraryId();
+			retour += ":";
+			retour += library.getBookOrderAsString();
 		}
 		return retour;
 	}
