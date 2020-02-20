@@ -72,9 +72,12 @@ public class Launcher {
 			@Override
 			public int compare(Library o1, Library o2) {
 				int res = 0;
-				res = o1.nbBooksByDay  - o2.nbBooksByDay;
+				res = o2.nbBooksByDay - o1.nbBooksByDay;
 				if (res == 0) {
-					res =  o1.signupDuration - o2.signupDuration;
+					res =  o2.books.size() - o1.books.size();
+				}
+				if (res == 0) {
+					res =  o2.signupDuration - o1.signupDuration;
 				}
 				return res;
 			}
@@ -105,6 +108,22 @@ public class Launcher {
 				index++;
 			}
 		});
+		
+//		registrationLibs.forEach(lib -> {
+//			int scanDay = lib.startTime;
+//			int index = 0;
+//			ArrayList<Integer> bookToSkip = new ArrayList<>();
+//			for (Integer b : lib.orderedBooks) {
+//				if (index % lib.nbBooksByDay == 0) {
+//					scanDay++;
+//				}
+//				if (scanDay > bookRegistration.get(b) && scanDay < dayThreshold) {
+//					bookToSkip.add(b);
+//				}
+//				index++;
+//			}
+//			lib.orderedBooks.removeAll(bookToSkip);
+//		});
 		registrationLibs = registrationLibs.stream().filter(lib -> lib.orderedBooks.size() > 0).collect(Collectors.toList());
 		return null;
 	}
