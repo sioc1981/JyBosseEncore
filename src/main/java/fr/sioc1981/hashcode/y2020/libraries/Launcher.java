@@ -63,7 +63,8 @@ public class Launcher {
 
 	private static void computeScore() {
 		int score = bookRegistration.keySet().stream().filter(b -> bookRegistration.getOrDefault(b, Integer.MAX_VALUE) < dayThreshold).mapToInt(b -> bookScores.get(b)).sum();
-		System.out.println("score: " + score );
+		long nmBooks = bookRegistration.keySet().stream().filter(b -> bookRegistration.getOrDefault(b, Integer.MAX_VALUE) < dayThreshold).count();
+		System.out.println("score: " + score + " from " + nmBooks + " books");
 		allScore += score;
 	}
 
@@ -73,14 +74,14 @@ public class Launcher {
 			@Override
 			public int compare(Library o2, Library o1) {
 				int res = 0;
-//				res = o1.nbBooksByDay - o2.nbBooksByDay;
-//				if (res == 0) {
-//					res =  o1.books.size() - o2.books.size();
-//				}
-//				if (res == 0) {
-//					res =  o1.signupDuration - o2.signupDuration;
-//				}
-				res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay ) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay );
+				res = o1.nbBooksByDay - o2.nbBooksByDay;
+				if (res == 0) {
+				res =  o1.books.size() - o2.books.size();
+				}
+				if (res == 0) {
+					res =  o1.signupDuration - o2.signupDuration;
+				}
+//				res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay * o1.maxScore) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay * o2.maxScore);
 				return res;
 			}
 			
@@ -92,7 +93,7 @@ public class Launcher {
 //			System.out.println("regitrationTime: " + regitrationTime);
 //			System.out.println("bookRegistration: " + bookRegistration);
 			lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
-				return bookRegistration.get(b) == null || bookRegistration.get(b) > regitrationTime;
+				return bookRegistration.get(b) == null || bookRegistration.get(b) > dayThreshold ;//regitrationTime;
 			}).collect(Collectors.toList());
 //			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
 			int scanDay = regitrationTime;
@@ -106,21 +107,21 @@ public class Launcher {
 			}
 		});
 		
-//		registrationLibs.forEach(lib -> {
-//			int scanDay = lib.startTime;
-//			int index = 0;
-//			ArrayList<Integer> bookToSkip = new ArrayList<>();
-//			for (Integer b : lib.orderedBooks) {
-//				if (index % lib.nbBooksByDay == 0) {
-//					scanDay++;
-//				}
-//				if (scanDay > bookRegistration.get(b) && scanDay < dayThreshold) {
-//					bookToSkip.add(b);
-//				}
-//				index++;
-//			}
-//			lib.orderedBooks.removeAll(bookToSkip);
-//		});
+		registrationLibs.forEach(lib -> {
+			int scanDay = lib.startTime;
+			int index = 0;
+			ArrayList<Integer> bookToSkip = new ArrayList<>();
+			for (Integer b : lib.orderedBooks) {
+				if (index % lib.nbBooksByDay == 0) {
+					scanDay++;
+				}
+				if (scanDay > bookRegistration.get(b) && scanDay < dayThreshold) {
+					bookToSkip.add(b);
+				}
+				index++;
+			}
+			lib.orderedBooks.removeAll(bookToSkip);
+		});
 		registrationLibs = registrationLibs.stream().filter(lib -> lib.orderedBooks.size() > 0).collect(Collectors.toList());
 		return null;
 	}
