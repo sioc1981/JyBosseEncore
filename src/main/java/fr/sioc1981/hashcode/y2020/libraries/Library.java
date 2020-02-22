@@ -16,6 +16,7 @@ public class Library {
 	int maxScore;
 	
 	List<Integer> books;
+	List<Integer> scoredBooks;
 	
 	List<Integer> orderedBooks = new ArrayList<>();
 

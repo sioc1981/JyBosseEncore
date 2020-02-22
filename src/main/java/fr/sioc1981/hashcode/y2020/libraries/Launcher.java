@@ -34,12 +34,6 @@ public class Launcher {
 
 
 	public static void main(String[] args) throws Exception {
-//		String fileName = "";
-//		fileName = "a_example";
-//		fileName = "b_small";
-//		fileName = "c_medium";
-//		fileName = "d_quite_big";
-//		fileName = "e_also_big";
 		Instant start = Instant.now();
 
 		Stream.of("a_example"
@@ -57,6 +51,7 @@ public class Launcher {
 			try {
 				loadInput(new File("in", fileName + ".txt"));
 				process();
+				computeScore();
 				writeOutput(registrationLibs, fileName);
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -66,19 +61,26 @@ public class Launcher {
 		System.out.println("All Scores: " + allScore + " in " + Duration.between(start, Instant.now()));
 	}
 
+	private static void computeScore() {
+		int score = bookRegistration.keySet().stream().filter(b -> bookRegistration.getOrDefault(b, Integer.MAX_VALUE) < dayThreshold).mapToInt(b -> bookScores.get(b)).sum();
+		System.out.println("score: " + score );
+		allScore += score;
+	}
+
 	private static ArrayList<Integer> process() {
 		registrationLibs = libs.stream().sorted(new Comparator<Library>() {
 
 			@Override
-			public int compare(Library o1, Library o2) {
+			public int compare(Library o2, Library o1) {
 				int res = 0;
-				res =  o2.books.size() - o1.books.size();
-				if (res == 0) {
-					res = o2.nbBooksByDay - o1.nbBooksByDay;
-				}
-				if (res == 0) {
-					res =  o2.signupDuration - o1.signupDuration;
-				}
+//				res = o1.nbBooksByDay - o2.nbBooksByDay;
+//				if (res == 0) {
+//					res =  o1.books.size() - o2.books.size();
+//				}
+//				if (res == 0) {
+//					res =  o1.signupDuration - o2.signupDuration;
+//				}
+				res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay ) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay );
 				return res;
 			}
 			
@@ -89,13 +91,8 @@ public class Launcher {
 //			System.out.println("lib.id: " + lib.id);
 //			System.out.println("regitrationTime: " + regitrationTime);
 //			System.out.println("bookRegistration: " + bookRegistration);
-			lib.orderedBooks = lib.books.stream().filter(b -> {
+			lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
 				return bookRegistration.get(b) == null || bookRegistration.get(b) > regitrationTime;
-			}).sorted(new Comparator<Integer>() {
-				@Override
-				public int compare(Integer lib1, Integer lib2) {
-					return bookScores.get(lib1) - bookScores.get(lib2);
-				}
 			}).collect(Collectors.toList());
 //			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
 			int scanDay = regitrationTime;
@@ -130,7 +127,7 @@ public class Launcher {
 
 	private static void loadInput(File file) throws FileNotFoundException {
 		libs = new ArrayList<Library>();
-		regitrationTime = 0;
+		regitrationTime = -1;
 		bookRegistration = new HashMap<>();
 		try (final Scanner scanner = new Scanner(file)) {
 			scanner.nextInt();
@@ -153,6 +150,13 @@ public class Launcher {
 				scanner.nextLine();
 				lib.books = Arrays.asList(scanner.nextLine().split(" ")).stream().map(Integer::parseInt)
 						.collect(Collectors.toList());
+				lib.maxScore = lib.books.stream().mapToInt(b -> bookScores.get(b)).sum();
+				lib.scoredBooks = lib.books.stream().sorted(new Comparator<Integer>() {
+					@Override
+					public int compare(Integer lib1, Integer lib2) {
+						return bookScores.get(lib1) - bookScores.get(lib2);
+					}
+				}).collect(Collectors.toList());
 				libs.add(lib);
 				} catch (NoSuchElementException e) {
 					// end of file
