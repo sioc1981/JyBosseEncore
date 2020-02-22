@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +26,6 @@ public class Launcher {
 	private static List<Library> libs;
 	
 	private static List<Library> registrationLibs;
-	
 	private static Map<Integer, Integer> bookRegistration;
 	
 	private static long allScore;
@@ -68,44 +68,79 @@ public class Launcher {
 		allScore += score;
 	}
 
+//	private static ArrayList<Integer> process() {
+//		registrationLibs = libs.stream().sorted(new Comparator<Library>() {
+//
+//			@Override
+//			public int compare(Library o2, Library o1) {
+//				int res = 0;
+//				res = o1.nbBooksByDay - o2.nbBooksByDay;
+//				if (res == 0) {
+//					res =  o1.books.size() - o2.books.size();
+//				}
+//				if (res == 0) {
+//					res =  o1.signupDuration - o2.signupDuration;
+//				}
+////				res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay * o1.maxScore) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay * o2.maxScore);
+//				return res;
+//			}
+//			
+//		}).collect(Collectors.toList());
+//		registrationLibs.forEach(lib -> {
+//			regitrationTime += lib.signupDuration; 
+//			lib.startTime = regitrationTime;
+////			System.out.println("lib.id: " + lib.id);
+////			System.out.println("regitrationTime: " + regitrationTime);
+////			System.out.println("bookRegistration: " + bookRegistration);
+//			lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
+//				return bookRegistration.get(b) == null || bookRegistration.get(b) > dayThreshold ;//regitrationTime;
+//			}).collect(Collectors.toList());
+////			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
+//			int scanDay = regitrationTime;
+//			int index = 0;
+//			for (Integer b : lib.orderedBooks) {
+//				if (index % lib.nbBooksByDay == 0) {
+//					scanDay++;
+//				}
+//				bookRegistration.put(b, scanDay);
+//				index++;
+//			}
+//		});
+//		
+//		registrationLibs.forEach(lib -> {
+//			int scanDay = lib.startTime;
+//			int index = 0;
+//			ArrayList<Integer> bookToSkip = new ArrayList<>();
+//			for (Integer b : lib.orderedBooks) {
+//				if (index % lib.nbBooksByDay == 0) {
+//					scanDay++;
+//				}
+//				if (scanDay > bookRegistration.get(b) && scanDay < dayThreshold) {
+//					bookToSkip.add(b);
+//				}
+//				index++;
+//			}
+//			lib.orderedBooks.removeAll(bookToSkip);
+//		});
+//		registrationLibs = registrationLibs.stream().filter(lib -> lib.orderedBooks.size() > 0).collect(Collectors.toList());
+//		return null;
+//	}
+	
 	private static ArrayList<Integer> process() {
-		registrationLibs = libs.stream().sorted(new Comparator<Library>() {
-
-			@Override
-			public int compare(Library o2, Library o1) {
-				int res = 0;
-				res = o1.nbBooksByDay - o2.nbBooksByDay;
-				if (res == 0) {
-				res =  o1.books.size() - o2.books.size();
-				}
-				if (res == 0) {
-					res =  o1.signupDuration - o2.signupDuration;
-				}
-//				res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay * o1.maxScore) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay * o2.maxScore);
-				return res;
+		
+		while (
+//				regitrationTime < dayThreshold
+//				|| 
+				!libs.isEmpty()
+				) {
+			Library lib = findNextLib();
+			if( lib == null) {
+				break;
 			}
-			
-		}).collect(Collectors.toList());
-		registrationLibs.forEach(lib -> {
-			regitrationTime += lib.signupDuration; 
-			lib.startTime = regitrationTime;
-//			System.out.println("lib.id: " + lib.id);
-//			System.out.println("regitrationTime: " + regitrationTime);
-//			System.out.println("bookRegistration: " + bookRegistration);
-			lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
-				return bookRegistration.get(b) == null || bookRegistration.get(b) > dayThreshold ;//regitrationTime;
-			}).collect(Collectors.toList());
-//			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
-			int scanDay = regitrationTime;
-			int index = 0;
-			for (Integer b : lib.orderedBooks) {
-				if (index % lib.nbBooksByDay == 0) {
-					scanDay++;
-				}
-				bookRegistration.put(b, scanDay);
-				index++;
-			}
-		});
+			registrationLibs.add(lib);
+			libs.remove(lib);
+			processLib(lib);
+		}
 		
 		registrationLibs.forEach(lib -> {
 			int scanDay = lib.startTime;
@@ -126,10 +161,60 @@ public class Launcher {
 		return null;
 	}
 
+	private static void processLib(Library lib) {
+		regitrationTime += lib.signupDuration; 
+		lib.startTime = regitrationTime;
+	//			System.out.println("lib.id: " + lib.id);
+	//			System.out.println("regitrationTime: " + regitrationTime);
+	//			System.out.println("bookRegistration: " + bookRegistration);
+		lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
+			return bookRegistration.get(b) == null || bookRegistration.get(b) > dayThreshold ;//regitrationTime;
+		}).collect(Collectors.toList());
+	//			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
+		int scanDay = regitrationTime;
+		int index = 0;
+		for (Integer b : lib.orderedBooks) {
+			if (index % lib.nbBooksByDay == 0) {
+				scanDay++;
+			}
+			bookRegistration.put(b, scanDay);
+			index++;
+		}
+		libs.forEach(l -> { 
+			l.scoredBooks.removeAll(bookRegistration.keySet());
+			computeLibBooksScore(l);
+		});
+	}
+		
+	private static Library findNextLib() {
+		return libs.stream().sorted(new Comparator<Library>() {
+
+			@Override
+			public int compare(Library o2, Library o1) {
+				int res = 0;
+				res =  o1.maxScore - o2.maxScore;
+				if (res == 0) {
+					res = o1.nbBooksByDay - o2.nbBooksByDay;
+				}
+				if (res == 0) {
+					res =  o1.signupDuration - o2.signupDuration;
+				}
+				if (res == 0) {
+					res =  o1.scoredBooks.size() - o2.scoredBooks.size();
+				}
+//				res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay * o1.maxScore) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay * o2.maxScore);
+				return res;
+			}
+			
+		}).findFirst().orElse(null);
+	}
+
+
 	private static void loadInput(File file) throws FileNotFoundException {
 		libs = new ArrayList<Library>();
 		regitrationTime = -1;
 		bookRegistration = new HashMap<>();
+		registrationLibs = new ArrayList<Library>();
 		try (final Scanner scanner = new Scanner(file)) {
 			scanner.nextInt();
 			scanner.nextInt();
@@ -151,19 +236,23 @@ public class Launcher {
 				scanner.nextLine();
 				lib.books = Arrays.asList(scanner.nextLine().split(" ")).stream().map(Integer::parseInt)
 						.collect(Collectors.toList());
-				lib.maxScore = lib.books.stream().mapToInt(b -> bookScores.get(b)).sum();
 				lib.scoredBooks = lib.books.stream().sorted(new Comparator<Integer>() {
 					@Override
 					public int compare(Integer lib1, Integer lib2) {
 						return bookScores.get(lib1) - bookScores.get(lib2);
 					}
 				}).collect(Collectors.toList());
+				computeLibBooksScore(lib);
 				libs.add(lib);
 				} catch (NoSuchElementException e) {
 					// end of file
 				}
 			}
 		}
+	}
+
+	private static void computeLibBooksScore(Library lib) {
+		lib.maxScore = lib.scoredBooks.stream().mapToInt(b -> bookScores.get(b)).sum();
 	}
 
 	private static void writeOutput(List<Library> libs, String fileName) throws Exception {
@@ -183,67 +272,79 @@ public class Launcher {
 		}
 	}
 
-//	public static class NodeTask extends RecursiveTask<Long> {
-//		/**
-//		 * 
-//		 */
-//		private static final long serialVersionUID = 104262222884216920L;
-//		
-//		final int index;
-//		
-//		
-//		final long score;
-//		
-//		ArrayList<Integer> currentPizzasToOrder;
-//		
-//		NodeTask(int index, long score, ArrayList<Integer> currentPizzasToOrder) {
-//			this.index = index;
-//			this.score = score;
-//			this.currentPizzasToOrder = currentPizzasToOrder;
-//		}
-//
-//		public ArrayList<Integer> getCurrentPizzasToOrder() {
-//			return currentPizzasToOrder;
-//		}
-//
-//		protected Long compute() {
-//			if (index < 0 || maxSlicesFound) {
-//				return score;
-//			}
-//			 
-//			long slicePizza = pizzas.get(index);
-//			
-//			long currentScore = score;
-//			long includeScore = score + slicePizza;
-//			
-//			if ( includeScore == maxSlices) {
-//				maxSlicesFound = true;
-//				currentPizzasToOrder = (ArrayList<Integer>) currentPizzasToOrder.clone();
-//				currentPizzasToOrder.add(index);
-//				return (long) maxSlices;
-//			}
-//			
-//			NodeTask nt1 = new NodeTask(index - 1, currentScore, currentPizzasToOrder);
-//			nt1.fork();
-//			
-//			
-//			NodeTask nt2 = null;
-//			NodeTask nt = null;
-//			if (includeScore < maxSlices) {
-//				currentPizzasToOrder = (ArrayList<Integer>) currentPizzasToOrder.clone();
-//				currentPizzasToOrder.add(index);
-//				currentScore = includeScore;
-//				nt2  = new NodeTask(index - 1, currentScore, currentPizzasToOrder);
-//				nt2.setRawResult(nt2.compute());
-//				nt  = nt2.getRawResult() > nt1.join() ? nt2 : nt1;
-//			} else {
-//				nt1.join();
-//				nt = nt1;
-//			}
-//
-//			this.currentPizzasToOrder = nt.getCurrentPizzasToOrder();
-//			return nt.getRawResult();
-//		}
-//	}
+	public static class NodeTask extends RecursiveTask<Void> {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 104262222884216920L;
+		
+		final int index;
+		
+		
+		final long score;
+		
+		ArrayList<Integer> currentPizzasToOrder;
+		
+		NodeTask(int index, long score, ArrayList<Integer> currentPizzasToOrder) {
+			this.index = index;
+			this.score = score;
+			this.currentPizzasToOrder = currentPizzasToOrder;
+		}
+
+		public ArrayList<Integer> getCurrentPizzasToOrder() {
+			return currentPizzasToOrder;
+		}
+
+		protected Void compute() {
+			if (regitrationTime >= dayThreshold) {
+				return null;
+			}
+			 
+			Library lib = findNextLib();
+			
+			regitrationTime += lib.signupDuration; 
+			lib.startTime = regitrationTime;
+//			System.out.println("lib.id: " + lib.id);
+//			System.out.println("regitrationTime: " + regitrationTime);
+//			System.out.println("bookRegistration: " + bookRegistration);
+			lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
+				return bookRegistration.get(b) == null; // || bookRegistration.get(b) > dayThreshold ;//regitrationTime;
+			}).collect(Collectors.toList());
+//			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
+			int scanDay = regitrationTime;
+			int index = 0;
+			for (Integer b : lib.orderedBooks) {
+				if (index % lib.nbBooksByDay == 0) {
+					scanDay++;
+				}
+				if(scanDay < dayThreshold) {
+					bookRegistration.put(b, scanDay);
+				}
+				index++;
+			}
+			
+			return null;
+		}
+
+		private Library findNextLib() {
+			return libs.stream().sorted(new Comparator<Library>() {
+
+				@Override
+				public int compare(Library o2, Library o1) {
+					int res = 0;
+					res = o1.nbBooksByDay - o2.nbBooksByDay;
+					if (res == 0) {
+						res =  o1.books.size() - o2.books.size();
+					}
+					if (res == 0) {
+						res =  o1.signupDuration - o2.signupDuration;
+					}
+//					res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay * o1.maxScore) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay * o2.maxScore);
+					return res;
+				}
+				
+			}).findFirst().orElse(null);
+		}
+	}
 
 }
