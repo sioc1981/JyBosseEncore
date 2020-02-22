@@ -192,12 +192,15 @@ public class Launcher {
 			@Override
 			public int compare(Library o2, Library o1) {
 				int res = 0;
-				res =  o1.maxScore - o2.maxScore;
 				if (res == 0) {
-					res = o1.nbBooksByDay - o2.nbBooksByDay;
+					// registration: shorter is better
+					res =  o2.signupDuration - o1.signupDuration;
 				}
 				if (res == 0) {
-					res =  o1.signupDuration - o2.signupDuration;
+					res =  o1.maxScore - o2.maxScore;
+				}
+				if (res == 0) {
+					res = o1.nbBooksByDay - o2.nbBooksByDay;
 				}
 				if (res == 0) {
 					res =  o1.scoredBooks.size() - o2.scoredBooks.size();
@@ -269,81 +272,6 @@ public class Launcher {
 				bwriter.write(lib.orderedBooks.stream().map(i -> Integer.toString(i)).collect(Collectors.joining(" ")));
 				bwriter.write('\n');
 			}
-		}
-	}
-
-	public static class NodeTask extends RecursiveTask<Void> {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 104262222884216920L;
-		
-		final int index;
-		
-		
-		final long score;
-		
-		ArrayList<Integer> currentPizzasToOrder;
-		
-		NodeTask(int index, long score, ArrayList<Integer> currentPizzasToOrder) {
-			this.index = index;
-			this.score = score;
-			this.currentPizzasToOrder = currentPizzasToOrder;
-		}
-
-		public ArrayList<Integer> getCurrentPizzasToOrder() {
-			return currentPizzasToOrder;
-		}
-
-		protected Void compute() {
-			if (regitrationTime >= dayThreshold) {
-				return null;
-			}
-			 
-			Library lib = findNextLib();
-			
-			regitrationTime += lib.signupDuration; 
-			lib.startTime = regitrationTime;
-//			System.out.println("lib.id: " + lib.id);
-//			System.out.println("regitrationTime: " + regitrationTime);
-//			System.out.println("bookRegistration: " + bookRegistration);
-			lib.orderedBooks = lib.scoredBooks.stream().filter(b -> {
-				return bookRegistration.get(b) == null; // || bookRegistration.get(b) > dayThreshold ;//regitrationTime;
-			}).collect(Collectors.toList());
-//			System.out.println("lib.orderedBooks: " + lib.orderedBooks);
-			int scanDay = regitrationTime;
-			int index = 0;
-			for (Integer b : lib.orderedBooks) {
-				if (index % lib.nbBooksByDay == 0) {
-					scanDay++;
-				}
-				if(scanDay < dayThreshold) {
-					bookRegistration.put(b, scanDay);
-				}
-				index++;
-			}
-			
-			return null;
-		}
-
-		private Library findNextLib() {
-			return libs.stream().sorted(new Comparator<Library>() {
-
-				@Override
-				public int compare(Library o2, Library o1) {
-					int res = 0;
-					res = o1.nbBooksByDay - o2.nbBooksByDay;
-					if (res == 0) {
-						res =  o1.books.size() - o2.books.size();
-					}
-					if (res == 0) {
-						res =  o1.signupDuration - o2.signupDuration;
-					}
-//					res = (o1.signupDuration + o1.books.size() / o1.nbBooksByDay * o1.maxScore) - (o2.signupDuration + o2.books.size() / o2.nbBooksByDay * o2.maxScore);
-					return res;
-				}
-				
-			}).findFirst().orElse(null);
 		}
 	}
 
