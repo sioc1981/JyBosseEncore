@@ -29,6 +29,7 @@ public class Launcher {
 	
 	private static long allScore;
 	private static int regitrationTime;
+	private static int maxBookFrequency;
 
 
 	public static void main(String[] args) throws Exception {
@@ -234,9 +235,10 @@ public class Launcher {
 					// end of file
 				}
 			}
+			maxBookFrequency = bookFrequency.values().stream().mapToInt(f -> f).max().orElse(0) + 1;
 			System.out.println("allRegDuration: " + allRegDuration + " avg: " + allRegDuration / nbLib);
 			System.out.println("allBooksByDay: " + allBooksByDay + " avg: " + allBooksByDay / nbLib);
-//			System.out.println("bookFrequency: ");
+			System.out.println("bookFrequency: max:" + (maxBookFrequency-1));
 //			bookFrequency.forEach((b,f) -> {
 //				System.out.println("b: " + b + " f: " + f + " score:" + bookScores.get(b));
 //			});
@@ -255,7 +257,7 @@ public class Launcher {
 			if(day == dayThreshold) {
 				break;
 			}
-			newScore += bookScores.get(b);
+			newScore += bookScores.get(b) * (maxBookFrequency - bookFrequency.get(b));
 			index++;
 		}
 		lib.maxScore = newScore;
