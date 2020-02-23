@@ -15,6 +15,8 @@ public class Library {
 	
 	int maxScore;
 	
+	double eval;
+	
 	List<Integer> books;
 	List<Integer> scoredBooks;
 	
